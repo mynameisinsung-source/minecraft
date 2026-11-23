@@ -22,7 +22,7 @@ def test_build_guarded_once(pack_root):
     for fn in ("village/build", "village/build_here"):
         first = [l for l in text(pack_root, fn).splitlines() if "built" in l]
         assert first and "execute if data storage create_rpg:village built" in first[0]
-    assert "data modify storage create_rpg:village built set value 1b" in text(pack_root, "village/construct")
+    assert "data modify storage create_rpg:village built set value 1b" in text(pack_root, "village/construct")  # (guarded, see below)
 
 
 def test_auto_build_only_for_new_players(pack_root):
@@ -96,3 +96,36 @@ def test_home_macro_and_return_scroll(pack_root):
     use = text(pack_root, "village/use_home").splitlines()
     assert use[0] == "advancement revoke @s only create_rpg:village/drink_home"
     assert "function create_rpg:home" in use
+
+
+def test_npc_summon_offsets_are_whole_blocks(pack_root):
+    # build_at positions at integer x/z, which Vec3 parsing already centres (+0.5)
+    for l in text(pack_root, "village/construct").splitlines():
+        if l.startswith("summon minecraft:villager"):
+            x, y, z = l.split()[2:5]
+            assert "." not in x and "." not in z, l
+
+
+def test_vanilla_village_placed_before_plaza(pack_root):
+    lines = text(pack_root, "village/construct").splitlines()
+    vil = next(i for i, l in enumerate(lines) if "place structure minecraft:village_plains" in l)
+    first_fill = next(i for i, l in enumerate(lines) if l.startswith("fill "))
+    assert vil < first_fill
+
+
+def test_respawn_npcs_function(pack_root):
+    body = text(pack_root, "village/respawn_npcs_at")
+    assert "kill @e[type=minecraft:villager,tag=rpg_npc" in body and "kill @e[type=minecraft:witch" in body
+    assert body.count("summon minecraft:villager") == 4
+    assert "function create_rpg:village/respawn_npcs_at with storage create_rpg:village" in text(pack_root, "village/respawn_npcs")
+
+
+def test_spawn_radius_zero_and_built_only_on_success(pack_root):
+    con = text(pack_root, "village/construct")
+    assert "gamerule spawnRadius 0" in con
+    assert "execute store success score #tpl rpg_tmp run place template create_rpg:forge" in con
+    assert "execute if score #tpl rpg_tmp matches 1 run data modify storage create_rpg:village built set value 1b" in con
+
+
+def test_build_here_warns_about_vanilla_village_range(pack_root):
+    assert "남쪽" in text(pack_root, "village/build_here") and "150" in text(pack_root, "village/build_here")

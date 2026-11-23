@@ -34,29 +34,37 @@ def summon_npc(n: Npc) -> str:
            f"CustomName:'{name}',Tags:[\"rpg_npc\",\"rpg_npc_{n.id}\"],Rotation:[{n.yaw}f,0.0f],"
            f'VillagerData:{{profession:"{n.profession}",level:5,type:"minecraft:plains"}},'
            f"Offers:{{Recipes:[{offers}]}}}}")
-    return f"summon minecraft:villager ~{x + 0.5} ~ ~{z + 0.5} {tag}"
+    return f"summon minecraft:villager ~{x} ~ ~{z} {tag}"  # origin is already block-centred
+
+
+def npc_lines() -> list:
+    return [f"kill @e[type=minecraft:villager,tag=rpg_npc,distance=..{H * 2}]",
+            f"kill @e[type=minecraft:witch,distance=..{H * 2}]"] + [summon_npc(n) for n in NPCS]
 
 
 def construct() -> str:
-    L = [f"fill ~-{H} ~ ~-{H} ~{H} ~15 ~{H} minecraft:air",
+    # vanilla village first, so the plaza below overwrites any piece that reaches it
+    L = [f"execute store success score #vil rpg_tmp run place structure minecraft:village_plains ~ ~ ~{VILLAGE_OFFSET_Z}",
+         f"fill ~-{H} ~ ~-{H} ~{H} ~15 ~{H} minecraft:air",
          f"fill ~-{H} ~-6 ~-{H} ~{H} ~-2 ~{H} minecraft:stone",
          f"fill ~-{H} ~-1 ~-{H} ~{H} ~-1 ~{H} minecraft:stone_bricks",
          f"fill ~-{H - 2} ~-1 ~-{H - 2} ~{H - 2} ~-1 ~{H - 2} minecraft:dirt_path",
          f"fill ~-1 ~-1 ~-{H - 2} ~1 ~-1 ~{H - 2} minecraft:polished_andesite",
          f"fill ~-{H - 2} ~-1 ~-1 ~{H - 2} ~-1 ~1 minecraft:polished_andesite"]
     for name, (dx, dz, rot) in PLACEMENTS.items():
-        L.append(f"place template {NS}:{name} ~{dx} ~-1 ~{dz} {rot}")
+        cmd = f"place template {NS}:{name} ~{dx} ~-1 ~{dz} {rot}"
+        L.append(f"execute store success score #tpl rpg_tmp run {cmd}" if name == "forge" else cmd)
     L.append("setblock ~2 ~ ~2 minecraft:bell[attachment=floor,facing=north]")
     for x, z in ((6, 6), (-6, 6), (6, -6), (-6, -6)):
         L += [f"fill ~{x} ~ ~{z} ~{x} ~1 ~{z} minecraft:oak_fence",
               f"setblock ~{x} ~2 ~{z} minecraft:lantern[hanging=false]"]
-    L.append(f"kill @e[type=minecraft:villager,tag=rpg_npc,distance=..{H * 2}]")
-    L += [summon_npc(n) for n in NPCS]
-    L += [f"execute store success score #vil rpg_tmp run place structure minecraft:village_plains ~ ~ ~{VILLAGE_OFFSET_Z}",
-          'execute if score #vil rpg_tmp matches 0 run tellraw @a {"text":"(바닐라 마을은 생성하지 못했어요. 광장과 NPC는 정상이에요.)","color":"gray"}',
+    L += npc_lines()
+    L += ['execute if score #vil rpg_tmp matches 0 run tellraw @a {"text":"(바닐라 마을은 생성하지 못했어요. 광장과 NPC는 정상이에요.)","color":"gray"}',
           "setworldspawn ~ ~ ~",
-          f"data modify {ST} built set value 1b",
-          'tellraw @a [{"text":"마을이 완성됐어요! ","color":"gold"},{"text":"광장의 촌장 오르빈에게 말을 걸어 보세요.","color":"yellow"}]',
+          "gamerule spawnRadius 0",
+          f"execute if score #tpl rpg_tmp matches 1 run data modify {ST} built set value 1b",
+          'execute if score #tpl rpg_tmp matches 0 run tellraw @a {"text":"마을을 짓지 못했어요(청크가 로드되지 않음). 그 자리에 서서 /function create_rpg:village/build_here 를 다시 입력하세요.","color":"red"}',
+          'execute if score #tpl rpg_tmp matches 1 run tellraw @a [{"text":"마을이 완성됐어요! ","color":"gold"},{"text":"광장의 촌장 오르빈에게 말을 걸어 보세요.","color":"yellow"}]',
           "playsound minecraft:block.bell.use master @a ~ ~ ~ 1 1"]
     return "\n".join(L) + "\n"
 
@@ -82,7 +90,7 @@ def generate(root: Path) -> None:
         f"execute store result {ST} x int 1 run data get entity @s Pos[0]",
         f"execute store result {ST} y int 1 run data get entity @s Pos[1]",
         f"execute store result {ST} z int 1 run data get entity @s Pos[2]",
-        _tell("5초 뒤에 이 자리에 마을이 생겨요. 주변 27×27칸이 정리됩니다."),
+        _tell("5초 뒤에 이 자리에 마을이 생겨요. 주변 27×27칸이 정리되고, 남쪽 약 150칸 범위에 바닐라 마을도 생겨요. 그동안 제자리에 서 있으세요."),
         f"schedule function {NS}:village/build 100t"]) + "\n")
     write_text(f / "village" / "build.mcfunction", "\n".join([
         f"execute if data {ST} built run return 0",
@@ -90,6 +98,12 @@ def generate(root: Path) -> None:
     write_text(f / "village" / "build_at.mcfunction",
                f"$execute in minecraft:overworld positioned $(x) $(y) $(z) run function {NS}:village/construct\n")
     write_text(f / "village" / "construct.mcfunction", construct())
+    write_text(f / "village" / "respawn_npcs.mcfunction", "\n".join([
+        f"execute unless data {ST} built run " + _tell("아직 마을이 없어요.", "red"),
+        f"execute if data {ST} built run function {NS}:village/respawn_npcs_at with {ST}",
+        f"execute if data {ST} built run " + _tell("마을 NPC를 다시 불러왔어요.", "green")]) + "\n")
+    write_text(f / "village" / "respawn_npcs_at.mcfunction", "\n".join(
+        f"$execute in minecraft:overworld positioned $(x) $(y) $(z) run {l}" for l in npc_lines()) + "\n")
     write_text(f / "home.mcfunction", "\n".join([
         f"execute unless data {ST} built run " + _tell("아직 마을이 없어요.", "red"),
         f"execute if data {ST} built run function {NS}:village/home_tp with {ST}"]) + "\n")

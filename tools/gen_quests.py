@@ -61,6 +61,13 @@ def generate(root: Path) -> None:
             {"text": "✔ 의뢰 완료: ", "color": "gold"}, {"text": q.title, "color": "yellow"},
             {"text": f"  (보상: {rewards})", "color": "gray"}], ensure_ascii=False))
         body.append("playsound minecraft:ui.toast.challenge_complete player @s")
+        if q.phase == "최종":
+            body.append("tellraw @s " + json.dumps([
+                {"text": "[촌장 오르빈] ", "color": "gold"},
+                {"text": "자네가 해냈군! 오늘부터 자네를 ", "color": "white"},
+                {"text": "「용을 쓰러뜨린 자」", "color": "light_purple", "bold": True},
+                {"text": "라 부르겠네. 마을 모두가 자네를 기억할 걸세.", "color": "white"}], ensure_ascii=False))
+            body.append("title @s title " + json.dumps({"text": "용을 쓰러뜨린 자", "color": "light_purple"}, ensure_ascii=False))
         if i + 1 < len(QUESTS):
             nxt = QUESTS[i + 1]
             if nxt.kind != "forge":

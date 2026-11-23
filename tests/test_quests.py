@@ -48,3 +48,8 @@ def test_quest_rewards_valid_items(pack_root):
         body = (pack_root / f"{F}quest/reward/{q.id}.mcfunction").read_text(encoding="utf-8")
         assert body.count("give @s ") == len(q.rewards)
         assert adv(pack_root, q.id)["rewards"]["function"] == f"create_rpg:quest/reward/{q.id}"
+
+
+def test_final_quest_title_dialogue(pack_root):
+    body = (pack_root / f"{F}quest/reward/q15.mcfunction").read_text(encoding="utf-8")
+    assert "용을 쓰러뜨린 자" in body and "촌장 오르빈" in body
