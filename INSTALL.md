@@ -37,6 +37,19 @@
 | 13 | 강화 상한 | +3인 장비에 중급 주문서 → 거절됨. `/tag @s add rpg_smith_1` 후 다시 마시기 | 태그 후에는 +4 성공. 확인 후 `/tag @s remove rpg_smith_1` |
 | 14 | 행운 | `/tag @s add rpg_luck_3` 후 철광석 여러 개 채굴 | 가끔(약 15%) 철 원석이 1개 더. 확인 후 `/tag @s remove rpg_luck_3` |
 
+### 테스트용 아이템 꺼내기 (OP 필요)
+아이템 명령어가 채팅 길이 제한보다 길어서, 짧은 함수로 꺼내요. `/function create_rpg:give/` 까지 입력하고 Tab을 누르면 목록이 나와요.
+
+| 꺼낼 것 | 명령어 | 개수 |
+|---|---|---|
+| 주문서 | `/function create_rpg:give/scroll_low` (`mid`, `high`, `top`) | 16 |
+| 재료 | `/function create_rpg:give/essence_1` (`fragment_N`, `powder_N`, `alloy_N`, `plate_N`, N=1~4), `.../legend_core` | 16 |
+| 장비 | `/function create_rpg:give/gear_legend_sword` (`gear_<단계>_<부위>`) | 1 |
+
+- 단계: `apprentice`(1) · `journeyman`(2) · `artisan`(3) · `arcane`(4) · `legend`(5)
+- 부위: `sword` · `pickaxe` · `helmet` · `chestplate` · `leggings` · `boots`
+- 장비를 꺼내면 대장간 도전 과제와 대장장이 경험치도 함께 들어와요(처음 한 번).
+
 **문제가 생기면:** Aternos **로그**에서 `create_rpg`, `puffish`, `Couldn't parse` 를 검색해서 나온 줄을 복사해 주세요.
 
 ## 4. 진행 가이드
