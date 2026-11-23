@@ -24,8 +24,8 @@ def _pack_mcmeta(root: Path) -> None:
 
 
 def _generators():
-    from tools import gen_recipes, gen_skills
-    return [_pack_mcmeta, gen_skills.generate, gen_recipes.generate]
+    from tools import gen_loot, gen_recipes, gen_skills
+    return [_pack_mcmeta, gen_skills.generate, gen_recipes.generate, gen_loot.generate]
 
 
 def build(out_dir: Path) -> Path:

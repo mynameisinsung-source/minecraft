@@ -130,3 +130,22 @@ def heat_of(pack_root, rpg_id):
         if r["type"] == "create:mixing" and rpg_id in [i for res in r["results"] for i in _rpg_ids_in(res)]:
             return r.get("heat_requirement")
     raise AssertionError(f"no mixing recipe for {rpg_id}")
+
+
+TAG_RE = __import__("re").compile(r'Tags:\[\\?"(\w+)\\?"\]')
+
+
+def modifiers(pack_root):
+    return [load(p) for p in sorted((Path(pack_root) / "data/create_rpg/loot_modifiers").glob("*.json"))]
+
+
+def table_path(pack_root, table_id):
+    ns, path = table_id.split(":")
+    return Path(pack_root) / f"data/{ns}/loot_table/{path}.json"
+
+
+def tags_required_by_loot(pack_root):
+    out = set()
+    for m in modifiers(pack_root):
+        out.update(TAG_RE.findall(__import__("json").dumps(m)))
+    return out

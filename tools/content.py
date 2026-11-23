@@ -253,3 +253,31 @@ TIERS: list[Tier] = [
 BASE_INGOT = {1: "minecraft:iron_ingot", 2: "minecraft:gold_ingot", 3: "minecraft:diamond", 4: "minecraft:netherite_ingot"}
 ALLOY_HEAT = {1: None, 2: "heated", 3: "heated", 4: "superheated"}
 TRANSITIONAL = "create:incomplete_precision_mechanism"
+
+
+# ---------------------------------------------------------------- drops
+OVERWORLD_MONSTERS = ["zombie", "husk", "drowned", "skeleton", "stray", "spider", "cave_spider", "creeper", "witch",
+                      "slime", "pillager", "vindicator", "zombie_villager", "phantom", "bogged"]
+NETHER_MONSTERS = ["blaze", "wither_skeleton", "piglin_brute", "ghast", "magma_cube", "hoglin", "zombified_piglin"]
+END_MONSTERS = ["enderman", "shulker", "endermite"]
+
+
+def _ores(*names):
+    return [f"minecraft:blocks/{n}" for base in names for n in (base, f"deepslate_{base}")]
+
+
+# (modifier name, material, count, chance, gate tag, source)
+#   source = ("mobs", entity tag, dimension|None) | ("entity", entity id) | ("ores", [loot tables])
+DROPS = [
+    ("essence_1", "essence_1", 1, 0.30, None, ("mobs", "overworld_monsters", None)),
+    ("essence_2", "essence_2", 1, 0.15, "rpg_hunt_1", ("mobs", "overworld_monsters", None)),
+    ("essence_3", "essence_3", 1, 0.25, "rpg_hunt_2", ("mobs", "nether_monsters", None)),
+    ("essence_4", "essence_4", 1, 0.20, "rpg_hunt_3", ("mobs", "end_monsters", "minecraft:the_end")),
+    ("essence_4_wither", "essence_4", 8, 1.0, None, ("entity", "minecraft:wither")),
+    ("fragment_1", "fragment_1", 1, 0.35, None, ("ores", _ores("coal_ore", "copper_ore", "iron_ore"))),
+    ("fragment_2", "fragment_2", 1, 0.30, "rpg_mine_1", ("ores", _ores("gold_ore", "redstone_ore", "lapis_ore"))),
+    ("fragment_3", "fragment_3", 1, 0.30, "rpg_mine_2",
+     ("ores", ["minecraft:blocks/nether_gold_ore", "minecraft:blocks/nether_quartz_ore", "minecraft:blocks/ancient_debris"])),
+    ("fragment_4", "fragment_4", 1, 0.40, "rpg_mine_3",
+     ("ores", _ores("diamond_ore", "emerald_ore") + ["minecraft:blocks/ancient_debris"])),
+]
