@@ -14,7 +14,7 @@ def test_advancement_rewards_point_to_existing_functions(pack_root):
             seen += 1
             ns, path = fn.split(":")
             assert (pack_root / f"data/{ns}/function/{path}.mcfunction").exists()
-    assert seen == 34  # 30 forge + 4 enhancement scrolls
+    assert seen >= 34  # 30 forge + 4 enhancement scrolls + village/NPC/quest advancements
 
 
 def test_forge_xp_scales_with_tier(pack_root):

@@ -80,3 +80,31 @@ def give_stack_command(base: str, comps: dict, count: int) -> str:
 
 def give_command(mat_id: str, count: int) -> str:
     return give_stack_command(_material(mat_id).base, material_components(mat_id), count)
+
+
+def _key(k: str) -> str:
+    return f'"{k}"' if ":" in k else k
+
+
+def snbt(v) -> str:
+    """SNBT for NBT compounds (keys containing ':' are quoted)."""
+    if isinstance(v, dict):
+        return "{" + ",".join(f"{_key(k)}:{snbt(x)}" for k, x in v.items()) + "}"
+    if isinstance(v, list):
+        return "[" + ",".join(snbt(x) for x in v) + "]"
+    return _snbt(v)
+
+
+def stack_snbt(base: str, comps: dict | None, count: int) -> str:
+    d = {"id": base, "count": count}
+    if comps:
+        d["components"] = comps
+    return snbt(d)
+
+
+def cost_snbt(base: str, comps: dict | None, count: int) -> str:
+    """Villager ItemCost: components is an exact predicate, so only custom_data is required."""
+    d = {"id": base, "count": count}
+    if comps and "minecraft:custom_data" in comps:
+        d["components"] = {"minecraft:custom_data": comps["minecraft:custom_data"]}
+    return snbt(d)
