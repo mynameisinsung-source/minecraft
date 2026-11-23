@@ -25,8 +25,8 @@ def _pack_mcmeta(root: Path) -> None:
 
 
 def _generators():
-    from tools import gen_enhance, gen_give, gen_loot, gen_village, gen_recipes, gen_skills, gen_smithing
-    return [_pack_mcmeta, gen_skills.generate, gen_recipes.generate, gen_loot.generate, gen_smithing.generate, gen_enhance.generate, gen_give.generate, gen_village.generate]
+    from tools import gen_enhance, gen_give, gen_loot, gen_npc, gen_village, gen_recipes, gen_skills, gen_smithing
+    return [_pack_mcmeta, gen_skills.generate, gen_recipes.generate, gen_loot.generate, gen_smithing.generate, gen_enhance.generate, gen_give.generate, gen_village.generate, gen_npc.generate]
 
 
 def build(out_dir: Path) -> Path:

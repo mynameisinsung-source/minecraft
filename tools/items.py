@@ -75,6 +75,8 @@ def _snbt(v) -> str:
 
 def give_stack_command(base: str, comps: dict, count: int) -> str:
     """`give @s base[components] count` in 1.21.1 item-argument syntax."""
+    if not comps:
+        return f"give @s {base} {count}"
     return f"give @s {base}[{','.join(f'{k}={_snbt(v)}' for k, v in comps.items())}] {count}"
 
 
