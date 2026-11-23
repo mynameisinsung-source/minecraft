@@ -2,6 +2,7 @@
 import json
 import shutil
 import sys
+import zipfile
 from pathlib import Path
 
 from tools import content
@@ -36,7 +37,12 @@ def build(out_dir: Path) -> Path:
     root.mkdir(parents=True)
     for gen in _generators():
         gen(root)
-    return out_dir / f"{content.NAMESPACE}.zip"
+    zip_path = out_dir / f"{content.NAMESPACE}.zip"
+    with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as z:
+        for f in sorted(root.rglob("*")):
+            if f.is_file():
+                z.write(f, f.relative_to(root).as_posix())
+    return zip_path
 
 
 if __name__ == "__main__":
