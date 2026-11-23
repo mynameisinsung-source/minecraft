@@ -23,7 +23,9 @@ def _pack_mcmeta(root: Path) -> None:
         "description": "Create RPG — 사냥·광질·대장장이 성장 + Create 대장간"}})
 
 
-GENERATORS = [_pack_mcmeta]
+def _generators():
+    from tools import gen_skills
+    return [_pack_mcmeta, gen_skills.generate]
 
 
 def build(out_dir: Path) -> Path:
@@ -32,7 +34,7 @@ def build(out_dir: Path) -> Path:
     if root.exists():
         shutil.rmtree(root)
     root.mkdir(parents=True)
-    for gen in GENERATORS:
+    for gen in _generators():
         gen(root)
     return out_dir / f"{content.NAMESPACE}.zip"
 
