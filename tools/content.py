@@ -296,3 +296,30 @@ LUCK_DROPS = {
     "minecraft:nether_quartz_ore": "minecraft:quartz",
     "minecraft:nether_gold_ore": "minecraft:gold_nugget",
 }
+
+
+# ---------------------------------------------------------------- enhancement (+1..+10)
+@dataclass(frozen=True)
+class Scroll:
+    grade: str
+    name: str
+    lo: int
+    hi: int
+    n: int              # uses plate_n + essence_n
+    heat: str | None
+    potion_color: int
+
+
+SCROLLS: dict[str, Scroll] = {
+    "low": Scroll("low", "하급 강화 주문서", 1, 3, 1, None, 0xB0B0B0),
+    "mid": Scroll("mid", "중급 강화 주문서", 4, 5, 2, None, 0xF0D040),
+    "high": Scroll("high", "상급 강화 주문서", 6, 7, 3, "heated", 0x40D0F0),
+    "top": Scroll("top", "최상급 강화 주문서", 8, 10, 4, "superheated", 0xC040F0),
+}
+ENH_MAX = 10
+ENH_BASE_CAP = 3
+ENH_CAPS = {"rpg_smith_1": 5, "rpg_smith_2": 7, "rpg_smith_3": 10}
+ENH_PER_LEVEL = {"sword": ("generic.attack_damage", 1, "add_value"),
+                 "pickaxe": ("player.block_break_speed", 0.05, "add_multiplied_base"),
+                 "armor": ("generic.armor", 0.5, "add_value")}
+ENH_MAX_BONUS_HEALTH = 2

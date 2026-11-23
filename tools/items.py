@@ -61,13 +61,22 @@ def material_ingredient(mat_id: str) -> dict:
     return rpg_ingredient(mat_id, _material(mat_id).base)
 
 
-def give_command(mat_id: str, count: int) -> str:
+def _snbt(v) -> str:
+    if isinstance(v, bool):
+        return "true" if v else "false"
+    if isinstance(v, (int, float)):
+        return str(v)
+    if isinstance(v, str):
+        return f"'{v}'" if v.startswith("{") else json.dumps(v, ensure_ascii=False)
+    if isinstance(v, list):
+        return "[" + ",".join(_snbt(x) for x in v) + "]"
+    return "{" + ",".join(f"{k}:{_snbt(x)}" for k, x in v.items()) + "}"
+
+
+def give_stack_command(base: str, comps: dict, count: int) -> str:
     """`give @s base[components] count` in 1.21.1 item-argument syntax."""
-    m = _material(mat_id)
-    c = material_components(mat_id)
-    parts = [f'minecraft:custom_data={{{NS}:"{m.id}"}}',
-             f"minecraft:custom_name='{c['minecraft:custom_name']}'",
-             "minecraft:lore=[" + ",".join(f"'{l}'" for l in c["minecraft:lore"]) + "]"]
-    if m.glint:
-        parts.append("minecraft:enchantment_glint_override=true")
-    return f"give @s {m.base}[{','.join(parts)}] {count}"
+    return f"give @s {base}[{','.join(f'{k}={_snbt(v)}' for k, v in comps.items())}] {count}"
+
+
+def give_command(mat_id: str, count: int) -> str:
+    return give_stack_command(_material(mat_id).base, material_components(mat_id), count)
