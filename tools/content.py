@@ -27,7 +27,7 @@ MATERIALS: dict[str, Material] = {
     **_series("essence", "minecraft:prismarine_crystals", "몬스터 정수", "{n}단계 몬스터에게서 얻은 정수"),
     **_series("fragment", "minecraft:disc_fragment_5", "광맥 조각", "{n}단계 광맥에서 캐낸 조각"),
     **_series("powder", "minecraft:glowstone_dust", "강화 가루", "광맥 조각 {n}단계를 분쇄한 가루"),
-    **_series("alloy", "minecraft:netherite_scrap", "강화 합금", "{n}단계 장비의 재료가 되는 합금"),
+    **_series("alloy", "minecraft:brick", "강화 합금", "{n}단계 장비의 재료가 되는 합금"),
     **_series("plate", "create:iron_sheet", "강화 합금 판", "{n}단계 합금을 눌러 만든 판"),
     "legend_core": Material("legend_core", "minecraft:heart_of_the_sea", "전설 핵",
                             ["위더의 별에서 뽑아낸 힘", "전설 장비의 심장"], glint=True, color="gold"),
@@ -152,10 +152,10 @@ MINING_SOURCES = [{
 }]
 
 SMITHING_CRAFTS = [
-    "create:cogwheel", "create:large_cogwheel", "create:shaft", "create:andesite_casing", "create:brass_casing",
-    "create:copper_casing", "create:mechanical_press", "create:mechanical_mixer", "create:deployer", "create:basin",
-    "create:depot", "create:belt_connector", "create:millstone", "create:crushing_wheel", "create:mechanical_crafter",
-    "create:spout", "create:fluid_tank", "create:blaze_burner", "create:precision_mechanism", "create:electron_tube",
+    "create:cogwheel", "create:large_cogwheel", "create:shaft",
+    "create:mechanical_press", "create:mechanical_mixer", "create:deployer", "create:basin",
+    "create:depot", "create:belt_connector", "create:millstone", "create:mechanical_crafter",
+    "create:spout", "create:fluid_tank", "create:electron_tube",
 ]
 
 SMITHING_SOURCES = [{
@@ -163,9 +163,8 @@ SMITHING_SOURCES = [{
     "data": {
         "variables": {
             "is_part": _var({"type": "get_crafted_item_stack"}, _test(item="#create_rpg:smithing_crafts")),
-            "count": _var({"type": "get_crafted_item_stack"}, {"type": "get_count"}),
         },
-        "experience": [{"condition": "is_part", "expression": "count * 4"}],
+        "experience": [{"condition": "is_part", "expression": "5"}],
     },
 }]
 
@@ -250,7 +249,7 @@ TIERS: list[Tier] = [
     Tier(5, "legend", "전설", "netherite", "gold", 8, (3, 4, 3, 2), 10, 0.60, "epic"),
 ]
 
-BASE_INGOT = {1: "minecraft:iron_ingot", 2: "minecraft:gold_ingot", 3: "minecraft:diamond", 4: "minecraft:netherite_ingot"}
+BASE_INGOT = {1: "minecraft:iron_ingot", 2: "minecraft:gold_ingot", 3: "minecraft:diamond", 4: "minecraft:netherite_scrap"}
 ALLOY_HEAT = {1: None, 2: "heated", 3: "heated", 4: "superheated"}
 TRANSITIONAL = "create:incomplete_precision_mechanism"
 

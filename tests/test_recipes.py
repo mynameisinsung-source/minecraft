@@ -72,3 +72,21 @@ def test_modifier_ids_unique_per_item(pack_root):
     for p in pack_root.glob("data/create_rpg/recipe/*/gear_*.json"):
         ids = [(m["type"], m["id"]) for m in _mods(pack_root, p.relative_to(pack_root))]
         assert len(ids) == len(set(ids)), p.name
+
+
+def test_material_bases_cannot_shortcut_progression():
+    from tools.content import MATERIALS
+    progression = {"minecraft:netherite_scrap", "minecraft:netherite_ingot", "minecraft:diamond",
+                   "minecraft:iron_ingot", "minecraft:gold_ingot", "minecraft:nether_star", "minecraft:ancient_debris"}
+    assert not {m.base for m in MATERIALS.values()} & progression
+
+
+def test_legend_tier_upgrades_arcane_gear_in_one_loop(pack_root):
+    r = load(pack_root / (SA + "gear_legend_chestplate.json"))
+    assert r["loops"] == 1
+    assert r["ingredient"]["components"]["minecraft:custom_data"]["create_rpg"] == "gear_arcane_chestplate"
+
+
+def test_alloy_4_uses_netherite_scrap(pack_root):
+    r = load(pack_root / "data/create_rpg/recipe/mixing/alloy_4.json")
+    assert {"item": "minecraft:netherite_scrap"} in r["ingredients"]

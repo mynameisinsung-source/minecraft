@@ -79,12 +79,12 @@ def _sequence(t: Tier):
         2: (1, [deploy(m("plate_1")), deploy(m("essence_1")), press()]),
         3: (2, [deploy(m("plate_2")), deploy(m("essence_2")), press()]),
         4: (3, [deploy(m("plate_3")), fill(250), deploy(m("fragment_3")), press()]),
-        5: (2, [deploy(m("legend_core")), deploy(m("plate_4")), fill(500), press()]),
+        5: (1, [deploy(m("legend_core")), deploy(m("plate_4")), fill(500), press()]),
     }[t.n]
 
 
 def _input(t: Tier, slot: str) -> dict:
-    if t.n in (2, 4):  # upgrades of the previous tier's RPG item
+    if t.n in (2, 4, 5):  # upgrades of the previous tier's RPG item
         prev = TIERS[t.n - 2]
         return rpg_ingredient(gear_id(prev, slot), vanilla_item(prev.base_material, slot))
     return {"item": vanilla_item(t.base_material, slot)}

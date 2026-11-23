@@ -1,3 +1,4 @@
+import json
 import pytest
 from conftest import load, cat_dir, reachable, granted_tags
 
@@ -44,4 +45,13 @@ def test_gates_require_increasing_spent_points(pack_root, cat):
 
 def test_smithing_crafts_tag_lists_create_parts(pack_root):
     tag = load(pack_root / "data/create_rpg/tags/item/smithing_crafts.json")
-    assert "create:cogwheel" in tag["values"] and len(tag["values"]) == 20
+    assert "create:cogwheel" in tag["values"] and len(tag["values"]) == 14
+
+
+def test_smithing_craft_xp_is_flat_and_only_crafting_table_parts(pack_root):
+    tag = load(pack_root / "data/create_rpg/tags/item/smithing_crafts.json")["values"]
+    dead = {"create:andesite_casing", "create:brass_casing", "create:copper_casing", "create:crushing_wheel",
+            "create:precision_mechanism", "create:blaze_burner"}
+    assert not dead & set(tag)
+    src = load(cat_dir(pack_root, "smithing") / "experience.json")["sources"][0]
+    assert "count" not in json.dumps(src["data"]["experience"])
