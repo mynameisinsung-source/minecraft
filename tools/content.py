@@ -206,3 +206,50 @@ SKILL_TREES: dict[str, Tree] = {
          ("명장 대장장이", "보너스: 강화 합금 판 III 4개를 받습니다.", "minecraft:smithing_table", _smith_gate(3))],
         SMITHING_SOURCES, "create:cogwheel"),
 }
+
+
+# ---------------------------------------------------------------- gear tiers
+GEAR_SLOTS = ["sword", "pickaxe", "helmet", "chestplate", "leggings", "boots"]
+SLOT_NAME = {"sword": "검", "pickaxe": "곡괭이", "helmet": "투구", "chestplate": "흉갑", "leggings": "레깅스", "boots": "부츠"}
+ARMOR_SLOT = {"helmet": "head", "chestplate": "chest", "leggings": "legs", "boots": "feet"}
+
+# Vanilla 1.21.1 defaults (attribute_modifiers replaces them, so we restate them).
+VANILLA = {
+    "iron": {"sword": (5, -2.4), "pickaxe": (3, -2.8), "armor": (2, 6, 5, 2), "toughness": 0, "kb": 0},
+    "diamond": {"sword": (6, -2.4), "pickaxe": (4, -2.8), "armor": (3, 8, 6, 3), "toughness": 2, "kb": 0},
+    "netherite": {"sword": (7, -2.4), "pickaxe": (5, -2.8), "armor": (3, 8, 6, 3), "toughness": 3, "kb": 0.1},
+}
+
+
+@dataclass(frozen=True)
+class Tier:
+    n: int
+    key: str
+    name: str
+    base_material: str
+    color: str
+    sword_bonus: float          # attack damage
+    armor_bonus: tuple          # helmet, chestplate, leggings, boots
+    health_bonus: float         # on chestplate
+    mining_bonus: float         # pickaxe block_break_speed, add_multiplied_base
+    rarity: str
+
+
+# Bonus table (on top of vanilla):
+# | tier | sword dmg | armor set (h/c/l/b)   | chest health | pickaxe speed |
+# | 1    | +1        | 2  (0/1/1/0)          | 0            | +10%          |
+# | 2    | +2        | 4  (1/1/1/1)          | +2           | +20%          |
+# | 3    | +3        | 6  (1/2/2/1)          | +4           | +30%          |
+# | 4    | +5        | 9  (2/3/2/2)          | +6           | +45%          |
+# | 5    | +8        | 12 (3/4/3/2)          | +10          | +60%          |
+TIERS: list[Tier] = [
+    Tier(1, "apprentice", "구리 견습", "iron", "white", 1, (0, 1, 1, 0), 0, 0.10, "common"),
+    Tier(2, "journeyman", "황동 숙련", "iron", "yellow", 2, (1, 1, 1, 1), 2, 0.20, "uncommon"),
+    Tier(3, "artisan", "강철 장인", "diamond", "aqua", 3, (1, 2, 2, 1), 4, 0.30, "rare"),
+    Tier(4, "arcane", "비전 명장", "diamond", "light_purple", 5, (2, 3, 2, 2), 6, 0.45, "rare"),
+    Tier(5, "legend", "전설", "netherite", "gold", 8, (3, 4, 3, 2), 10, 0.60, "epic"),
+]
+
+BASE_INGOT = {1: "minecraft:iron_ingot", 2: "minecraft:gold_ingot", 3: "minecraft:diamond", 4: "minecraft:netherite_ingot"}
+ALLOY_HEAT = {1: None, 2: "heated", 3: "heated", 4: "superheated"}
+TRANSITIONAL = "create:incomplete_precision_mechanism"
