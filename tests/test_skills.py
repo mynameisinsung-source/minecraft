@@ -25,7 +25,14 @@ def test_every_skill_reachable_from_root(pack_root, cat):
 
 @pytest.mark.parametrize("cat,prefix", [("hunting", "rpg_hunt"), ("mining", "rpg_mine"), ("smithing", "rpg_smith")])
 def test_gate_tags(pack_root, cat, prefix):
-    assert granted_tags(pack_root, cat) == {f"{prefix}_{i}" for i in (1, 2, 3)}
+    defs = load(cat_dir(pack_root, cat) / "definitions.json")
+    gate_tags = {r["data"]["tag"] for d in defs.values() if "required_spent_points" in d
+                 for r in d["rewards"] if r["type"] == "puffish_skills:tag"}
+    assert gate_tags == {f"{prefix}_{i}" for i in (1, 2, 3)}
+
+
+def test_mining_luck_nodes_grant_tags(pack_root):
+    assert granted_tags(pack_root, "mining") == {f"rpg_mine_{i}" for i in (1, 2, 3)} | {f"rpg_luck_{i}" for i in (1, 2, 3)}
 
 
 @pytest.mark.parametrize("cat", CATS)

@@ -24,8 +24,8 @@ def test_create_item_ids_exist(pack_root):
 
 
 def test_heat_requirements(pack_root):
-    assert heat_of(pack_root, "alloy_1") is None
-    assert heat_of(pack_root, "alloy_2") == heat_of(pack_root, "alloy_3") == "heated"
+    assert heat_of(pack_root, "alloy_1") is None and heat_of(pack_root, "alloy_2") is None
+    assert heat_of(pack_root, "alloy_3") == "heated"
     assert heat_of(pack_root, "alloy_4") == heat_of(pack_root, "legend_core") == "superheated"
 
 

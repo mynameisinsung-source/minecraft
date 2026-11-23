@@ -61,6 +61,7 @@ class Tree:
     sources: list
 
 
+LUCK_CHANCE = {1: 0.05, 2: 0.10, 3: 0.15}
 XP_VALUES = [20, 30, 45, 60, 80, 100, 125, 150, 180, 210, 245, 280, 320, 360, 400, 450, 500, 550, 600, 650]
 GATE_SPENT = [3, 7, 11]
 GATE_COST = 3  # 10 regular nodes + 3 gates x 3 = 19 points ≤ 20 levels
@@ -92,8 +93,12 @@ def _tree(key, title, icon, bg, branches, gates, xp_sources, root_icon):
         parent = f"{key}_root"
         for step in range(1, 4):
             nid = f"{key}_{'abc'[b]}{step}"
-            nodes.append(Node(nid, f"{name} {ROMAN[step]}", f"{name} {_fmt(value, op)}", bicon,
-                              [attr(attribute, value, op)], parent,
+            if op == "luck":
+                desc = f"광석을 캘 때 기본 드롭이 1개 더 나올 확률 {round(LUCK_CHANCE[step] * 100)}% (가장 높은 단계만 적용)"
+                rewards = [tag_reward(f"{attribute}_{step}")]
+            else:
+                desc, rewards = f"{name} {_fmt(value, op)}", [attr(attribute, value, op)]
+            nodes.append(Node(nid, f"{name} {ROMAN[step]}", desc, bicon, rewards, parent,
                               dirs[b][0] * 40 * step, dirs[b][1] * 34 * step))
             parent = nid
     prev = None
@@ -189,7 +194,7 @@ SKILL_TREES: dict[str, Tree] = {
     "mining": _tree(
         "mining", "광질", "minecraft:iron_pickaxe", BG.format("stone"),
         [("채굴 속도", "minecraft:golden_pickaxe", "player.block_break_speed", 0.1, "multiply_total"),
-         ("행운", "minecraft:emerald", "generic.luck", 0.5, "addition"),
+         ("행운", "minecraft:emerald", "rpg_luck", 0, "luck"),
          ("채굴 효율", "minecraft:iron_pickaxe", "player.mining_efficiency", 2, "addition")],
         [("광부 II", "해금: 금·레드스톤·청금석 광석에서 광맥 조각 II가 나옵니다.", "minecraft:gold_ore", [tag_reward("rpg_mine_1")]),
          ("광부 III", "해금: 네더 광석과 고대 잔해에서 광맥 조각 III이 나옵니다.", "minecraft:nether_quartz_ore", [tag_reward("rpg_mine_2")]),
@@ -250,7 +255,7 @@ TIERS: list[Tier] = [
 ]
 
 BASE_INGOT = {1: "minecraft:iron_ingot", 2: "minecraft:gold_ingot", 3: "minecraft:diamond", 4: "minecraft:netherite_scrap"}
-ALLOY_HEAT = {1: None, 2: "heated", 3: "heated", 4: "superheated"}
+ALLOY_HEAT = {1: None, 2: None, 3: "heated", 4: "superheated"}  # blaze burner needs the Nether -> late game only
 TRANSITIONAL = "create:incomplete_precision_mechanism"
 
 
@@ -280,3 +285,14 @@ DROPS = [
     ("fragment_4", "fragment_4", 1, 0.40, "rpg_mine_3",
      ("ores", _ores("diamond_ore", "emerald_ore") + ["minecraft:blocks/ancient_debris"])),
 ]
+
+
+# Luck: extra vanilla drop per ore block (mining branch B, tags rpg_luck_1..3)
+LUCK_DROPS = {
+    **{f"minecraft:{p}{o}_ore": item for o, item in [
+        ("coal", "minecraft:coal"), ("copper", "minecraft:raw_copper"), ("iron", "minecraft:raw_iron"),
+        ("gold", "minecraft:raw_gold"), ("redstone", "minecraft:redstone"), ("lapis", "minecraft:lapis_lazuli"),
+        ("diamond", "minecraft:diamond"), ("emerald", "minecraft:emerald")] for p in ("", "deepslate_")},
+    "minecraft:nether_quartz_ore": "minecraft:quartz",
+    "minecraft:nether_gold_ore": "minecraft:gold_nugget",
+}

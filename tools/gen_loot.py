@@ -2,7 +2,7 @@
 from pathlib import Path
 
 from tools.build import write_json
-from tools.content import DROPS, END_MONSTERS, NAMESPACE, NETHER_MONSTERS, OVERWORLD_MONSTERS, MATERIALS
+from tools.content import DROPS, LUCK_CHANCE, LUCK_DROPS, END_MONSTERS, NAMESPACE, NETHER_MONSTERS, OVERWORLD_MONSTERS, MATERIALS
 from tools.items import material_components
 
 DEBRIS = {"condition": "minecraft:block_state_property", "block": "minecraft:ancient_debris"}
@@ -68,6 +68,22 @@ def generate(root: Path) -> None:
         write_json(data / NAMESPACE / "loot_modifiers" / f"{name}.json", {
             "type": "neoforge:add_table", "conditions": _conditions(gate, source),
             "table": f"{NAMESPACE}:drops/{name}"})
+        entries.append(f"{NAMESPACE}:{name}")
+    for n, chance in LUCK_CHANCE.items():
+        name = f"luck_{n}"
+        pools = [{"rolls": 1, "entries": [{"type": "minecraft:item", "name": item}],
+                  "conditions": [{"condition": "minecraft:block_state_property", "block": block},
+                                 {"condition": "minecraft:random_chance", "chance": chance}]}
+                 for block, item in LUCK_DROPS.items()]
+        write_json(data / NAMESPACE / "loot_table" / "drops" / f"{name}.json", {"type": "minecraft:generic", "pools": pools})
+        conds = [{"condition": "minecraft:any_of", "terms": [
+                     {"condition": "neoforge:loot_table_id", "loot_table_id": b.replace("minecraft:", "minecraft:blocks/")}
+                     for b in LUCK_DROPS]},
+                 NO_SILK, _has_tag("this", f"rpg_luck_{n}")]
+        if n < max(LUCK_CHANCE):
+            conds.append({"condition": "minecraft:inverted", "term": _has_tag("this", f"rpg_luck_{n + 1}")})
+        write_json(data / NAMESPACE / "loot_modifiers" / f"{name}.json",
+                   {"type": "neoforge:add_table", "conditions": conds, "table": f"{NAMESPACE}:drops/{name}"})
         entries.append(f"{NAMESPACE}:{name}")
     write_json(data / "neoforge" / "loot_modifiers" / "global_loot_modifiers.json",
                {"replace": False, "entries": entries})
