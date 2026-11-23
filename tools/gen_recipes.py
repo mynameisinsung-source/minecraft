@@ -105,6 +105,12 @@ def generate(root: Path) -> None:
         write_json(r / "pressing" / f"plate_{n}.json", {
             "type": "create:pressing", "ingredients": [material_ingredient(f"alloy_{n}")],
             "results": [material_result(f"plate_{n}")]})
+    # Create's own brass is heated-only (blaze burner needs a Nether blaze), but Deployers need brass
+    # from tier 1. Slower unheated route: 1 brass instead of 2, plus redstone so it never shadows Create's.
+    write_json(r / "mixing" / "brass_ingot_unheated.json", {
+        "type": "create:mixing",
+        "ingredients": [{"tag": "c:ingots/copper"}, {"tag": "c:ingots/zinc"}, {"item": "minecraft:redstone"}],
+        "results": [{"id": "create:brass_ingot"}]})
     write_json(r / "mixing" / "legend_core.json", {
         "type": "create:mixing", "heat_requirement": "superheated",
         "ingredients": [{"item": "minecraft:nether_star"}] + [material_ingredient("essence_4")] * 4 + [material_ingredient("plate_4")] * 2,

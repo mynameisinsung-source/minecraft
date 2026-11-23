@@ -106,3 +106,10 @@ def test_load_tag_only(pack_root):
     assert load(pack_root / "data/minecraft/tags/function/load.json")["values"] == ["create_rpg:load"]
     assert "scoreboard objectives add rpg_tmp dummy" in (pack_root / f"{D}function/load.mcfunction").read_text()
     assert not (pack_root / "data/minecraft/tags/function/tick.json").exists()
+
+
+def test_scroll_is_mundane_potion_not_water(pack_root):
+    # water potions turn dirt into mud / fill cauldrons without firing consume_item -> scroll lost
+    r = load(pack_root / f"{D}recipe/mixing/scroll_low.json")
+    assert r["results"][0]["components"]["minecraft:potion_contents"]["potion"] == "minecraft:mundane"
+    assert 'potion:"minecraft:mundane"' in fn(pack_root, "low")

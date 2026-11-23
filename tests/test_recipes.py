@@ -1,6 +1,6 @@
 import json
 
-from conftest import DATA, load, recipe_output_rpg_ids, consumed_rpg_ids, obtainable_rpg_ids, all_item_ids, heat_of
+from conftest import DATA, load, recipes, _rpg_ids_in, recipe_output_rpg_ids, consumed_rpg_ids, obtainable_rpg_ids, all_item_ids, heat_of
 from tools.content import GEAR_SLOTS, TIERS
 
 TIER_KEYS = [t.key for t in TIERS]
@@ -90,3 +90,21 @@ def test_legend_tier_upgrades_arcane_gear_in_one_loop(pack_root):
 def test_alloy_4_uses_netherite_scrap(pack_root):
     r = load(pack_root / "data/create_rpg/recipe/mixing/alloy_4.json")
     assert {"item": "minecraft:netherite_scrap"} in r["ingredients"]
+
+
+def test_unheated_brass_so_deployers_need_no_nether(pack_root):
+    # Create's brass is heated-only (blaze burner = Nether); the Deployer needs brass from tier 1
+    r = load(pack_root / "data/create_rpg/recipe/mixing/brass_ingot_unheated.json")
+    assert "heat_requirement" not in r
+    items = [i.get("tag") or i.get("item") for i in r["ingredients"]]
+    assert "c:ingots/copper" in items and "c:ingots/zinc" in items and len(items) == 3
+    assert r["results"] == [{"id": "create:brass_ingot"}]
+
+
+def test_early_and_mid_recipes_need_no_heat(pack_root):
+    early = ["alloy_1", "alloy_2", "plate_1", "plate_2", "powder_1", "powder_2"]
+    for _, r in recipes(pack_root):
+        ids = [i for res in r.get("results", []) for i in _rpg_ids_in(res)]
+        if any(i in early or i.startswith(("gear_apprentice", "gear_journeyman", "gear_artisan"))
+               or i in ("scroll_low", "scroll_mid") for i in ids):
+            assert "heat_requirement" not in r, ids

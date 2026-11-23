@@ -19,7 +19,7 @@ OFF = "weapon.offhand"
 def scroll_components(s: Scroll) -> dict:
     lore = [f"+{s.lo} ~ +{s.hi} 강화용", "강화할 RPG 장비를 왼손에 들고 마시세요"]
     return rpg_components(f"scroll_{s.grade}", s.name, lore, glint=True, extra={
-        "minecraft:potion_contents": {"potion": "minecraft:water", "custom_color": s.potion_color},
+        "minecraft:potion_contents": {"potion": "minecraft:mundane", "custom_color": s.potion_color},
         "minecraft:max_stack_size": 16})
 
 
