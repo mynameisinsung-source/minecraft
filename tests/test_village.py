@@ -158,3 +158,50 @@ def test_home_macro_and_return_scroll(pack_root):
     use = text(pack_root, "village/use_home").splitlines()
     assert use[0] == "advancement revoke @s only create_rpg:village/drink_home"
     assert "function create_rpg:home" in use
+
+
+def test_fountain_water_visible(pack_root):
+    con = text(pack_root, "village/construct").splitlines()
+    assert not any(" outline" in l for l in con)
+    slab = next(i for i, l in enumerate(con) if "stone_brick_slab" in l)
+    assert "fill ~-1 ~ ~-6 ~1 ~ ~-4 minecraft:air" in con[slab + 1:slab + 3]
+
+
+def test_tree_clearing_covers_deep_sites(pack_root):
+    for p in LAYOUT:
+        body = text(pack_root, f"village/place/{p.id}")
+        assert "~-48" in body and "~48" in body
+        assert "replace minecraft:mangrove_roots" in body and "replace minecraft:mushroom_stem" in body
+
+
+def test_door_landing_carved(pack_root):
+    from tools.gen_village import landing_tiles
+    fps = {q.id: footprint(q) for q in LAYOUT}
+    for p in LAYOUT:
+        if not BUILDINGS[p.building].door:
+            continue
+        tiles = landing_tiles(p)
+        assert len(tiles) == 4, p.id
+        for x, z in tiles:
+            assert not any(in_fp(x, z, fp) for fp in fps.values()), (p.id, x, z)
+        body = text(pack_root, f"village/build/{p.id}")
+        assert "minecraft:dirt_path" in body and body.count("minecraft:air") >= 2
+
+
+def test_paths_clear_trees_at_plaza_height(pack_root):
+    con = text(pack_root, "village/construct")
+    for p in LAYOUT:
+        for x, z in path_tiles(p)[:3]:
+            assert f"fill ~{x} ~-48 ~{z} ~{x} ~48 ~{z} minecraft:air replace #minecraft:logs" in con
+
+
+def test_farm_crops_planted_after_light_update(pack_root):
+    s = nbt.read(pack_root / "data/create_rpg/structure/farm.nbt")
+    names = {p["Name"] for p in s["palette"]}
+    assert not names & {"minecraft:wheat", "minecraft:carrots", "minecraft:potatoes"}
+    assert 'summon minecraft:marker' in text(pack_root, "village/build/farm") and "rpg_farm" in text(pack_root, "village/build/farm")
+    assert "schedule function create_rpg:village/plant_crops 10t" in text(pack_root, "village/construct")
+    assert "execute at @e[type=minecraft:marker,tag=rpg_farm,limit=1] run function create_rpg:village/plant_crops_here" in text(pack_root, "village/plant_crops")
+    here = text(pack_root, "village/plant_crops_here")
+    for c in ("wheat[age=7]", "carrots[age=7]", "potatoes[age=7]"):
+        assert c in here

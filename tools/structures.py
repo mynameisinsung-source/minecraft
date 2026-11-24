@@ -1,7 +1,7 @@
 """Building designs -> structure template NBT (1.21.1, DataVersion 3955).
 
 Every building is designed with its door on the south wall (local +z, z = sz-1) and local y=0 as its
-floor; PLACEMENTS rotates it so the door faces the plaza center. Plaza center = (0, 0) = first player pos.
+floor; LAYOUT rotates it so the door faces the plaza center. Plaza center = (0, 0) = first player pos.
 """
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -261,12 +261,7 @@ def _farm() -> Building:
     b.fill(0, 0, 0, 8, 2, 8, AIR)
     b.fill(0, 0, 0, 8, 0, 8, "minecraft:farmland[moisture=7]")
     b.fill(1, 0, 4, 7, 0, 4, "minecraft:water[level=0]")
-    crops = ["minecraft:wheat[age=7]", "minecraft:carrots[age=7]", "minecraft:potatoes[age=7]"]
-    for z in range(1, 8):
-        if z == 4:
-            continue
-        for x in range(1, 8):
-            b.set(x, 1, z, crops[(x - 1) // 3 % 3])
+    # crops are planted later by village/plant_crops_here (light is not updated during placement)
     for x in range(9):
         for z in (0, 8):
             b.set(x, 0, z, "minecraft:oak_log[axis=x]")

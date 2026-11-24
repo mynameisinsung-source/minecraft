@@ -130,7 +130,8 @@ def construct() -> str:
          # fountain north of centre
          "fill ~-2 ~-1 ~-7 ~2 ~-1 ~-3 minecraft:stone_bricks",
          "fill ~-1 ~-1 ~-6 ~1 ~-1 ~-4 minecraft:water",
-         "fill ~-2 ~ ~-7 ~2 ~ ~-3 minecraft:stone_brick_slab[type=bottom] outline",
+         "fill ~-2 ~ ~-7 ~2 ~ ~-3 minecraft:stone_brick_slab[type=bottom]",
+         "fill ~-1 ~ ~-6 ~1 ~ ~-4 minecraft:air",
          "setblock ~ ~-1 ~-5 minecraft:stone_bricks",
          "setblock ~ ~ ~-5 minecraft:stone_brick_wall",
          "setblock ~ ~1 ~-5 minecraft:lantern[hanging=false]",
@@ -144,11 +145,15 @@ def construct() -> str:
         for t in path_tiles(p):
             if t not in tiles:
                 tiles.append(t)
+    for x, z in tiles:                                 # clear trunks/canopy first, at plaza height
+        L += [f"fill ~{x} ~-48 ~{z} ~{x} ~48 ~{z} minecraft:air replace #minecraft:logs",
+              f"fill ~{x} ~-48 ~{z} ~{x} ~48 ~{z} minecraft:air replace #minecraft:leaves"]
     for x, z in tiles:
         L += [f"execute positioned ~{x} ~ ~{z} {OVER} run fill ~ ~ ~ ~ ~1 ~ minecraft:air replace #minecraft:replaceable",
               f"execute positioned ~{x} ~ ~{z} {OVER} run setblock ~ ~-1 ~ minecraft:dirt_path"]
     L += decorations(tiles)
-    L += ["setworldspawn ~ ~ ~",
+    L += [f"schedule function {NS}:village/plant_crops 10t",
+          "setworldspawn ~ ~ ~",
           "gamerule spawnRadius 0",
           f"execute if score #tpl rpg_tmp matches 1 run data modify {ST} built set value 1b",
           'execute if score #tpl rpg_tmp matches 0 run tellraw @a {"text":"마을을 짓지 못했어요(청크가 로드되지 않음). 그 자리에 서서 /function create_rpg:village/build_here 를 다시 입력하세요.","color":"red"}',
@@ -160,10 +165,18 @@ def construct() -> str:
 def place_fn(p: Placed) -> str:
     x1, x2, z1, z2 = footprint(p)
     a, b, c, d = x1 - p.cx - 1, x2 - p.cx + 1, z1 - p.cz - 1, z2 - p.cz + 1
-    return "\n".join([
-        f"fill ~{a} ~-6 ~{c} ~{b} ~24 ~{d} minecraft:air replace #minecraft:logs",
-        f"fill ~{a} ~-6 ~{c} ~{b} ~24 ~{d} minecraft:air replace #minecraft:leaves",
-        f"execute {OVER} run function {NS}:village/build/{p.id}"]) + "\n"
+    clear = ["#minecraft:logs", "#minecraft:leaves", "minecraft:mangrove_roots", "minecraft:mushroom_stem",
+             "minecraft:brown_mushroom_block", "minecraft:red_mushroom_block", "minecraft:bee_nest"]
+    return "\n".join([f"fill ~{a} ~-48 ~{c} ~{b} ~48 ~{d} minecraft:air replace {t}" for t in clear]
+                     + [f"execute {OVER} run function {NS}:village/build/{p.id}"]) + "\n"
+
+
+def landing_tiles(p: Placed) -> list:
+    """2x2 level landing just outside the door, carved at floor height (fixes doors on slopes)."""
+    ux, uz = DIRS[p.facing]
+    px, pz = abs(uz), abs(ux)
+    dx, dz = door_world(p)
+    return [(dx + ux * i + px * j, dz + uz * i + pz * j) for i in (1, 2) for j in (0, 1)]
 
 
 def build_fn(p: Placed) -> str:
@@ -175,6 +188,15 @@ def build_fn(p: Placed) -> str:
     L = [f"fill ~{a} ~-6 ~{c} ~{b} ~-2 ~{d} minecraft:cobblestone",
          f"fill ~{a} ~ ~{c} ~{b} ~{bld.sy + 1} ~{d} minecraft:air",
          f"execute store success score #tpl rpg_tmp run {tpl}" if p.id == "forge" else tpl]
+    if bld.door:
+        t = landing_tiles(p)
+        lx1, lx2 = min(x for x, _ in t) - p.cx, max(x for x, _ in t) - p.cx
+        lz1, lz2 = min(z for _, z in t) - p.cz, max(z for _, z in t) - p.cz
+        L += [f"fill ~{lx1} ~ ~{lz1} ~{lx2} ~2 ~{lz2} minecraft:air",
+              f"fill ~{lx1} ~-4 ~{lz1} ~{lx2} ~-2 ~{lz2} minecraft:cobblestone",
+              f"fill ~{lx1} ~-1 ~{lz1} ~{lx2} ~-1 ~{lz2} minecraft:dirt_path"]
+    if p.building == "farm":
+        L.append('summon minecraft:marker ~ ~ ~ {Tags:["rpg_farm"]}')
     n = NPC_BY_BUILDING.get(p.id)
     if n:
         wx, wz = n.world_pos
@@ -224,6 +246,14 @@ def generate(root: Path) -> None:
     for p in LAYOUT:
         write_text(f / "village" / "place" / f"{p.id}.mcfunction", place_fn(p))
         write_text(f / "village" / "build" / f"{p.id}.mcfunction", build_fn(p))
+    write_text(f / "village" / "plant_crops.mcfunction",
+               f"execute at @e[type=minecraft:marker,tag=rpg_farm,limit=1] run function {NS}:village/plant_crops_here\n")
+    crops = []
+    for z1, z2 in ((-3, -1), (1, 3)):
+        crops += [f"fill ~-3 ~ ~{z1} ~-1 ~ ~{z2} minecraft:wheat[age=7]",
+                  f"fill ~0 ~ ~{z1} ~2 ~ ~{z2} minecraft:carrots[age=7]",
+                  f"fill ~3 ~ ~{z1} ~3 ~ ~{z2} minecraft:potatoes[age=7]"]
+    write_text(f / "village" / "plant_crops_here.mcfunction", "\n".join(crops) + "\n")
     write_text(f / "village" / "respawn_npcs.mcfunction", "\n".join([
         f"execute unless data {ST} built run " + _tell("아직 마을이 없어요.", "red"),
         f"execute if data {ST} built run function {NS}:village/respawn_npcs_here",
