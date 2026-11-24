@@ -324,9 +324,9 @@ LAYOUT = [
     Placed("house_1", "house_oak", -20, -20, "s"),
     Placed("house_2", "house_spruce", 30, -14, "w"),
     Placed("house_3", "house_birch", 32, 6, "w"),
-    Placed("house_4", "house_oak", -31, 4, "e"),
-    Placed("house_5", "house_spruce", 6, 32, "n"),
-    Placed("house_6", "house_birch", -6, -32, "s"),
+    Placed("house_4", "house_oak", -31, 12, "e"),
+    Placed("house_5", "house_spruce", 12, 32, "n"),
+    Placed("house_6", "house_birch", -14, -32, "s"),
 ]
 PLACED = {p.id: p for p in LAYOUT}
 
